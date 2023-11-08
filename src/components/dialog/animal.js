@@ -44,28 +44,141 @@ export function ConfirmDeleteAnimal({ open, setOpen, animalId }) {
   );
 }
 
-export const CreateAnimalForm = ({ open, setOpen }) => {
+export const CreateAnimalForm = ({ open, setOpen, fetchAnimalAPI }) => {
   const handleClose = () => {
     setOpen(false);
   };
-
+  const [habbitList, setHabbitList] = React.useState([]);
+  const [errorMessage, setErrorMessage] = React.useState({});
+  const [isBlurred, setIsBlurred] = React.useState(false);
+  // const { enqueueSnackbar } = useSnackbar();
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTQ3ZDcxMGZkYjBmMzk2ZjNkNjYzNjUiLCJpYXQiOjE2OTkyMDY5Mjh9.zM18liz95CV5pBke_ITSpi04EzlufUV2UDu29W68ork";
+  const url = "http://localhost:5000/api/animals/";
+  const addNewAnimal = async () => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(initialValues2),
+      });
+      if (response.ok) {
+        fetchAnimalAPI();
+        handleClose();
+      } else {
+        console.log("Error", response);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const fetchHabbit = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/habitats/", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const rpData = await response.json();
+        console.log("habbitat", rpData);
+        setHabbitList(rpData);
+      } else {
+        console.log("Error", response);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  React.useEffect(() => {
+    fetchHabbit();
+  }, []);
   const speciesOptions = [
     { value: "dog", label: "Dog" },
     { value: "cat", label: "Cat" },
     { value: "rabbit", label: "Rabbit" },
   ];
 
-  const initialValues = {
-    name: "",
-    species: "",
+  const [initialValues2, setIntialValues2] = React.useState({
+    animalName: "",
+    animalSpecies: "",
     dateOfBirth: "",
-    sex: false,
+    animalSex: "",
+    habitat: "",
+  });
+  // const [initialValues2, setIntialValues2] = React.useState();
+
+  const onSubmit = () => {
+    if (!errorMessage) {
+      addNewAnimal();
+    }
+  };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log(name, value);
+
+    setErrorMessage({
+      [`${name}Error`]: value ? "" : `Please enter a ${name}`,
+    });
+
+    // Tạo một bản sao của initialValues2 và cập nhật trường tương ứng
+    const newValues = { ...initialValues2 };
+    console.log(1);
+    newValues[name] = value;
+    console.log(2);
+    setIntialValues2(newValues);
+    console.log(3);
   };
 
-  const onSubmit = (values) => {
-    console.log(values);
-  };
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   console.log(name, value);
 
+  //   if (isBlurred) {
+  //     // Tạo một bản sao của initialValues2
+  //     const newValues = { ...initialValues2 };
+
+  //     if (name === "animalName") {
+  //       if (!value) {
+  //         setErrorMessage({ nameError: "Please enter a name" });
+  //       } else {
+  //         setErrorMessage({ nameError: "" });
+  //         newValues.animalName = value; // Cập nhật chỉ trường này
+  //       }
+  //     }
+  //     if (name === "animalSpecies") {
+  //       if (!value) {
+  //         setErrorMessage({ speciesError: "Please choose one of the species" });
+  //       } else {
+  //         setErrorMessage({ speciesError: "" });
+  //         newValues.animalSpecies = value; // Cập nhật chỉ trường này
+  //       }
+  //     }
+  //     if (name === "dateOfBirth") {
+  //       if (!value) {
+  //         setErrorMessage({ dateError: "Please choose one of the date" });
+  //       } else {
+  //         setErrorMessage({ dateError: "" });
+  //         newValues.dateOfBirth = value; // Cập nhật chỉ trường này
+  //       }
+  //     }
+  //     if (name === "habitat") {
+  //       if (!value) {
+  //         setErrorMessage({ habitError: "Please choose one of the habitat" });
+  //       } else {
+  //         setErrorMessage({ habitError: "" });
+  //         newValues.habitat = value; // Cập nhật chỉ trường này
+  //       }
+  //     }
+
+  //     setIntialValues2(newValues); // Cập nhật initialValues2 với các trường đã được cập nhật
+  //   }
+  // };
   return (
     <React.Fragment>
       <Dialog
@@ -78,7 +191,7 @@ export const CreateAnimalForm = ({ open, setOpen }) => {
       >
         <DialogTitle id="alert-dialog-title">Add new animal</DialogTitle>
         <DialogContent>
-          <Formik initialValues={initialValues} onSubmit={onSubmit}>
+          <Formik initialValues={initialValues2} onSubmit={onSubmit}>
             <Form
               style={{
                 display: "flex",
@@ -87,18 +200,52 @@ export const CreateAnimalForm = ({ open, setOpen }) => {
                 marginTop: "1rem",
               }}
             >
-              <Field name="name">
+              <Field name="animalName">
                 {({ field }) => (
-                  <TextField {...field} label="Name" variant="outlined" />
+                  <TextField
+                    {...field}
+                    name="animalName"
+                    label="Name"
+                    variant="outlined"
+                    required
+                    // value={
+                    //   initialValues.animalName ? initialValues.animalName : null
+                    // }
+                    // onClick={() => setIsBlurred(false)}
+                    onBlur={(e) => handleChange(e)}
+                    // onChange={(e) =>
+                    //   setIntialValues2({
+                    //     ...initialValues,
+                    //     animalName: e.target.value,
+                    //   })
+                    // }
+                  />
                 )}
               </Field>
-              <Field name="species">
+              {errorMessage.animalNameError ? (
+                <p style={{ color: "red" }}>{errorMessage.animalNameError}</p>
+              ) : null}
+              <Field name="animalSpecies">
                 {({ field }) => (
                   <TextField
                     select
                     {...field}
+                    name="animalSpecies"
                     label="Species"
                     variant="outlined"
+                    required
+                    // value={
+                    //   initialValues.animalSpecies
+                    //     ? initialValues.animalSpecies
+                    //     : null
+                    // }
+                    onBlur={(e) => handleChange(e)}
+                    // onChange={(e) =>
+                    //   setIntialValues2({
+                    //     ...initialValues,
+                    //     animalSpecies: e.target.value,
+                    //   })
+                    // }
                   >
                     {speciesOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -108,6 +255,11 @@ export const CreateAnimalForm = ({ open, setOpen }) => {
                   </TextField>
                 )}
               </Field>
+              {errorMessage.animalSpeciesError ? (
+                <p style={{ color: "red" }}>
+                  {errorMessage.animalSpeciesError}
+                </p>
+              ) : null}
               <Field name="dateOfBirth">
                 {({ field }) => (
                   <TextField
@@ -118,17 +270,79 @@ export const CreateAnimalForm = ({ open, setOpen }) => {
                       shrink: true,
                     }}
                     variant="outlined"
+                    required
+                    // value={
+                    //   initialValues.dateOfBirth
+                    //     ? initialValues.dateOfBirth
+                    //     : null
+                    // }
+                    onBlur={(e) => handleChange(e)}
+                    // onChange={(e) =>
+                    //   setIntialValues2({
+                    //     ...initialValues,
+                    //     dateOfBirth: e.target.value,
+                    //   })
+                    // }
                   />
                 )}
               </Field>
-              <Field name="sex">
+              {errorMessage.dateOfBirthError ? (
+                <p style={{ color: "red" }}>{errorMessage.dateOfBirthError}</p>
+              ) : null}
+              <Field name="animalSex">
                 {({ field }) => (
-                  <FormControlLabel
-                    control={<Checkbox {...field} />}
-                    label="Male"
-                  />
+                  <TextField
+                    select
+                    {...field}
+                    label="animalSex"
+                    required
+                    variant="outlined"
+                    onBlur={(e) => handleChange(e)}
+                    // value={initialValues.habitat ? initialValues.habitat : null}
+                    // onChange={(e) =>
+                    //   setIntialValues2({
+                    //     ...initialValues,
+                    //     habitat: e.target.value,
+                    //   })
+                    // }
+                  >
+                    <MenuItem value={"Female"}>Female</MenuItem>
+                    <MenuItem value={"Male"}>Male</MenuItem>
+                  </TextField>
                 )}
               </Field>
+              {errorMessage.animalSexError ? (
+                <p style={{ color: "red" }}>{errorMessage.animalSexError}</p>
+              ) : null}
+              {/* <Field name="habitat" value={"6547e0f77bbdf1c853b3df27"}></Field> */}
+              <Field name="habitat">
+                {({ field }) => (
+                  <TextField
+                    select
+                    {...field}
+                    label="habitat"
+                    required
+                    variant="outlined"
+                    onBlur={(e) => handleChange(e)}
+                    // value={initialValues.habitat ? initialValues.habitat : null}
+                    // onChange={(e) =>
+                    //   setIntialValues2({
+                    //     ...initialValues,
+                    //     habitat: e.target.value,
+                    //   })
+                    // }
+                  >
+                    {habbitList.map((option) => (
+                      <MenuItem key={option.habitatid} value={option.habitatid}>
+                        {option.habitatName}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              </Field>
+              {errorMessage.habitatError ? (
+                <p style={{ color: "red" }}>{errorMessage.habitatError}</p>
+              ) : null}
               <DialogActions>
                 <Button onClick={handleClose}>Cancell</Button>
                 <Button type="submit" variant="contained" color="primary">

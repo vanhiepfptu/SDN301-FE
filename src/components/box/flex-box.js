@@ -1,16 +1,18 @@
-import { Box } from '@mui/material'
-import React from 'react'
+import { Box } from "@mui/material";
+import React from "react";
 
-function FlexBox({children}) {
+function FlexBox({ children }) {
   return (
-    <Box sx={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center"
-    }}>
-        {children}
+        alignItems: "center",
+      }}
+    >
+      {children}
     </Box>
-  )
+  );
 }
 
-export default FlexBox
+export default FlexBox;

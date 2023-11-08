@@ -37,13 +37,56 @@ function Copyright(props) {
 const defaultTheme = createTheme();
 
 export default function SignIn() {
+  // const [userName, setUserName] = React.useState();
+
+  // const [passWord, setPassWord] = React.useState();
+
   const handleSubmit = (event) => {
     event.preventDefault();
+
     const data = new FormData(event.currentTarget);
     console.log({
-      email: data.get("email"),
+      email: data.get("usename"),
       password: data.get("password"),
     });
+
+    // const token = localStorage.getItem("token");
+
+    let token =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTRiNWNlMGJjMmU1YmI0NDlhMzA0YzkiLCJpYXQiOjE2OTk0Mzc3OTJ9.R-krbOlfiouEOpeQBv9hEplHHcPcCmCRfHQ3JRi4Vog";
+
+    async function fetchLogin() {
+      // const user = {
+      //   username: data.get(username),
+      //   password: data.get("password"),
+      // };
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/accounts/login",
+          {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + token,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username : "lekhaiphu",
+              password: "123456"
+            }),
+          }
+        );
+        if (response.ok) {
+          console.log("Login success!");
+          // const responseData = await response.json();
+
+        } else {
+          console.error("Error fetching data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchLogin();
   };
 
   return (
@@ -73,10 +116,10 @@ export default function SignIn() {
               margin="normal"
               required
               fullWidth
-              id="email"
+              id="usename"
               label="Email Address"
-              name="email"
-              autoComplete="email"
+              name="usename"
+              autoComplete="usename"
               autoFocus
             />
             <TextField
