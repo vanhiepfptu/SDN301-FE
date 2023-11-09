@@ -9,6 +9,8 @@ import {
   TableRow,
   Paper,
   Button,
+  Container,
+  Typography,
 } from "@mui/material";
 import FormTitle from "../../components/title/form-title";
 import FlexBox from "../../components/box/flex-box";
@@ -18,27 +20,12 @@ import {
   UpdateHabitatForm,
 } from "../../components/dialog/habitat";
 
-
 export default function Habitat() {
-  // const data = [
-  //   {
-  //     id: "1",
-  //     name: "Object 1",
-  //     type: "Type A",
-  //     size: 10.5,
-  //     conditional: "Condition 1",
-  //   },
-  //   {
-  //     id: "2",
-  //     name: "Object 2",
-  //     type: "Type B",
-  //     size: 8.2,
-  //     conditional: "Condition 2",
-  //   },
-  // ];
+  const token = localStorage.getItem("token");
 
-  let token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTQ3ZDcxMGZkYjBmMzk2ZjNkNjYzNjUiLCJpYXQiOjE2OTkyMDY5Mjh9.zM18liz95CV5pBke_ITSpi04EzlufUV2UDu29W68ork";
+  const [hasPermission, setHasPermission] = React.useState(true);
+
+  const [role, setRole] = React.useState(null);
 
   //get all habitat data
   const [habitat, setHabitat] = React.useState();
@@ -103,95 +90,141 @@ export default function Habitat() {
       console.error("Error fetching habitats data:", error);
     }
   }
+  const getProfile = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/accounts/profile",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      //   console.log(data);
+      setRole(data.roleName);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  React.useEffect(() => {
+    if (!token) {
+      setHasPermission(false);
+    }
+    if (token && role !== "admin") {
+      setHasPermission(false);
+    } else {
+      fetchHabitats();
+    }
+  }, []);
 
   //get habitat by id fetch
   const handleDeleteHabitat = (id) => {};
 
-  React.useEffect(() => {
-    fetchHabitats();
-  }, []);
+  // React.useEffect(() => {
+  //   fetchHabitats();
+  // }, []);
 
   return (
-    <StaffLayout>
-      <FlexBox>
-        <FormTitle title={"Habitat"} />
-        <Button
-          variant="contained"
-          onClick={() => {
-            setCreateHabitat(true);
-          }}
-        >
-          Add new habitat
-        </Button>
-      </FlexBox>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell align="center">Type</TableCell>
-              <TableCell align="right">Size</TableCell>
-              <TableCell align="right">Conditional</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {habitat?.map((data) => (
-              <TableRow key={data.id}>
-                <TableCell>{data.habitatName}</TableCell>
-                <TableCell align="center">{data.habitatType}</TableCell>
-                <TableCell align="right">{data.habitatSize}</TableCell>
-                <TableCell align="right">{data.condition}</TableCell>
-                <TableCell width={"220px"}>
-                  <FlexBox>
-                    <Button
-                      variant="outlined"
-                      color="success"
-                      onClick={() => {
-                        console.log("update id: ", data.habitatid);
-                        handleUpdateHabitat(data.habitatid);
-                      }}
-                    >
-                      Update
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => {
-                        console.log("delete id: ", data.habitatid);
-                        setIdHabitat(data.habitatid);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </FlexBox>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Delete dialog */}
-      <ConfirmDeleteHabitat
-        habitatId={deleteHabitat}
-        open={Boolean(deleteHabitat)}
-        setOpen={setDeleteHabitat}
-      />
-
-      {/* Create dialog */}
-      <CreateHabitatForm open={createHabitat} setOpen={setCreateHabitat} />
-
-      {/* Update dialog */}
-      {updateHabitat ? (
-        <UpdateHabitatForm
-          open={Boolean(updateHabitat)}
-          habitat={updateHabitat}
-          setOpen={setUpdateHabitat}
-        />
+    <React.Fragment>
+      {!hasPermission ? (
+        <Container>
+          <Typography sx={{ color: "red", paddingTop: "50px" }}>
+            YOU HAVE NO PERMISSION
+          </Typography>
+          <Button
+            onClick={() => {
+              window.location.href = "/login";
+            }}
+          >
+            Back to login
+          </Button>
+        </Container>
       ) : (
-        <></>
+        <StaffLayout>
+          <FlexBox>
+            <FormTitle title={"Habitat"} />
+            <Button
+              variant="contained"
+              onClick={() => {
+                setCreateHabitat(true);
+              }}
+            >
+              Add new habitat
+            </Button>
+          </FlexBox>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell align="center">Type</TableCell>
+                  <TableCell align="right">Size</TableCell>
+                  <TableCell align="right">Conditional</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {habitat?.map((data) => (
+                  <TableRow key={data.id}>
+                    <TableCell>{data.habitatName}</TableCell>
+                    <TableCell align="center">{data.habitatType}</TableCell>
+                    <TableCell align="right">{data.habitatSize}</TableCell>
+                    <TableCell align="right">{data.condition}</TableCell>
+                    <TableCell width={"220px"}>
+                      <FlexBox>
+                        <Button
+                          variant="outlined"
+                          color="success"
+                          onClick={() => {
+                            console.log("update id: ", data.habitatid);
+                            handleUpdateHabitat(data.habitatid);
+                          }}
+                        >
+                          Update
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => {
+                            console.log("delete id: ", data.habitatid);
+                            setIdHabitat(data.habitatid);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </FlexBox>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Delete dialog */}
+          <ConfirmDeleteHabitat
+            habitatId={deleteHabitat}
+            open={Boolean(deleteHabitat)}
+            setOpen={setDeleteHabitat}
+          />
+
+          {/* Create dialog */}
+          <CreateHabitatForm open={createHabitat} setOpen={setCreateHabitat} />
+
+          {/* Update dialog */}
+          {updateHabitat ? (
+            <UpdateHabitatForm
+              open={Boolean(updateHabitat)}
+              habitat={updateHabitat}
+              setOpen={setUpdateHabitat}
+            />
+          ) : (
+            <></>
+          )}
+        </StaffLayout>
       )}
-    </StaffLayout>
+    </React.Fragment>
   );
 }

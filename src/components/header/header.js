@@ -16,7 +16,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import LocalMallIcon from '@mui/icons-material/LocalMall';
+import LocalMallIcon from "@mui/icons-material/LocalMall";
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -58,6 +58,8 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function Header() {
+  const storedToken = localStorage.getItem("token");
+  const isUserLoggedIn = !!storedToken;
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
@@ -159,7 +161,7 @@ export default function Header() {
             noWrap
             component="div"
             onClick={() => {
-              navigate("/")
+              navigate("/");
             }}
             sx={{ display: { xs: "none", sm: "block" } }}
           >
@@ -189,12 +191,14 @@ export default function Header() {
               color="inherit"
             >
               <Badge badgeContent={1} color="error">
-                <LocalMallIcon onClick={() => {
-                  navigate("/cart")
-                }}/>
+                <LocalMallIcon
+                  onClick={() => {
+                    navigate("/cart");
+                  }}
+                />
               </Badge>
             </IconButton>
-            {alreadyLogin ? (
+            {isUserLoggedIn ? ( // Kiểm tra nếu có `storedToken`, hiển thị các menu khi đã đăng nhập
               <>
                 <IconButton
                   size="large"
@@ -219,6 +223,8 @@ export default function Header() {
               </>
             ) : (
               <>
+                {" "}
+                {/* Nếu chưa đăng nhập, hiển thị các nút Sign Up và Login */}
                 <Button
                   color="inherit"
                   onClick={() => {
