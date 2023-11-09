@@ -14,11 +14,42 @@ import {
   Grid,
 } from "@mui/material";
 
-export function ConfirmDeleteAnimal({ open, setOpen, animalId }) {
+export function ConfirmDeleteAnimal({
+  open,
+  setOpen,
+  animalId,
+  fetchAnimalAPI,
+}) {
   const handleClose = () => {
     setOpen(null);
   };
-
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTQ3ZDcxMGZkYjBmMzk2ZjNkNjYzNjUiLCJpYXQiOjE2OTkyMDY5Mjh9.zM18liz95CV5pBke_ITSpi04EzlufUV2UDu29W68ork";
+  const url = "http://localhost:5000/api/animals/";
+  const deleteAnimal = async () => {
+    try {
+      const response = await fetch(url + animalId, {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("data", data);
+        fetchAnimalAPI();
+        handleClose();
+      } else {
+        console.log("Fetch failed");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleSubmit = () => {
+    deleteAnimal();
+  };
   return (
     <React.Fragment>
       <Dialog
@@ -35,7 +66,7 @@ export function ConfirmDeleteAnimal({ open, setOpen, animalId }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Disagree</Button>
-          <Button onClick={handleClose} autoFocus>
+          <Button onClick={handleSubmit} autoFocus>
             Agree
           </Button>
         </DialogActions>
@@ -99,9 +130,9 @@ export const CreateAnimalForm = ({ open, setOpen, fetchAnimalAPI }) => {
     fetchHabbit();
   }, []);
   const speciesOptions = [
-    { value: "dog", label: "Dog" },
-    { value: "cat", label: "Cat" },
-    { value: "rabbit", label: "Rabbit" },
+    { value: "Dog", label: "Dog" },
+    { value: "Cat", label: "Cat" },
+    { value: "Rabbit", label: "Rabbit" },
   ];
 
   const [initialValues2, setIntialValues2] = React.useState({
@@ -114,9 +145,7 @@ export const CreateAnimalForm = ({ open, setOpen, fetchAnimalAPI }) => {
   // const [initialValues2, setIntialValues2] = React.useState();
 
   const onSubmit = () => {
-    if (!errorMessage) {
-      addNewAnimal();
-    }
+    addNewAnimal();
   };
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -128,11 +157,8 @@ export const CreateAnimalForm = ({ open, setOpen, fetchAnimalAPI }) => {
 
     // Tạo một bản sao của initialValues2 và cập nhật trường tương ứng
     const newValues = { ...initialValues2 };
-    console.log(1);
     newValues[name] = value;
-    console.log(2);
     setIntialValues2(newValues);
-    console.log(3);
   };
 
   // const handleChange = (e) => {
@@ -357,7 +383,7 @@ export const CreateAnimalForm = ({ open, setOpen, fetchAnimalAPI }) => {
   );
 };
 
-export const UpdateAnimalForm = ({ open, setOpen, animal }) => {
+export const UpdateAnimalForm = ({ open, setOpen, animal, fetchAnimalAPI }) => {
   const handleClose = () => {
     setOpen(null);
   };
@@ -373,16 +399,49 @@ export const UpdateAnimalForm = ({ open, setOpen, animal }) => {
     { value: "Rabbit", label: "Rabbit" },
   ];
   const initialValues = {
-    name: animal.name,
-    species: animal.species,
+    animalName: animal.animalName,
+    animalSex: animal.animalSex,
     dateOfBirth: animal.dateOfBirth,
-    sex: animal.sex,
+    animalSpecies: animal.animalSpecies,
   };
-
+  function getDateOfBirth(string) {
+    // const getDate = dayjs(dateValue).format("DD/MM/YYYY");
+    let data = new Date(string);
+    console.log(data);
+    return data;
+  }
   const validationSchema = null;
-
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTQ3ZDcxMGZkYjBmMzk2ZjNkNjYzNjUiLCJpYXQiOjE2OTkyMDY5Mjh9.zM18liz95CV5pBke_ITSpi04EzlufUV2UDu29W68ork";
+  const fetchUpdate = async (values) => {
+    try {
+      const reponse = await fetch(
+        `http://localhost:5000/api/animals/${animal.animalid}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(values),
+        }
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Update successful");
+          fetchAnimalAPI();
+          setOpen(null);
+        })
+        .catch((err) => {
+          console.log("Error", err);
+        });
+    } catch (e) {
+      console.log(e);
+    }
+  };
   const handleSubmit = (values) => {
     console.log(values);
+    fetchUpdate(values);
   };
   return (
     <React.Fragment>
@@ -414,16 +473,17 @@ export const UpdateAnimalForm = ({ open, setOpen, animal }) => {
                   <Grid item>
                     <Field
                       as={TextField}
-                      name="name"
+                      name="animalName"
                       label="Name"
                       variant="outlined"
                       fullWidth
+                      required
                     />
                   </Grid>
                   <Grid item>
                     <Field
                       as={TextField}
-                      name="species"
+                      name="animalSpecies"
                       label="Species"
                       select
                       variant="outlined"
@@ -447,12 +507,13 @@ export const UpdateAnimalForm = ({ open, setOpen, animal }) => {
                         shrink: true,
                       }}
                       fullWidth
+                      required
                     />
                   </Grid>
                   <Grid item>
                     <Field
                       as={TextField}
-                      name="sex"
+                      name="animalSex"
                       label="Sex"
                       select
                       variant="outlined"

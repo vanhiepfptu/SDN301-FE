@@ -13,6 +13,7 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import UserLayout from "../layout/userLayout";
+import { useNavigate } from "react-router-dom";
 
 function Copyright(props) {
   return (
@@ -40,54 +41,76 @@ export default function SignIn() {
   // const [userName, setUserName] = React.useState();
 
   // const [passWord, setPassWord] = React.useState();
-
+  const navigate = useNavigate();
+  const [roleName, setRoleName] = React.useState();
+  const handleRedirect = (roleName) => {
+    if (roleName === "admin") {
+      navigate("/staff/dashboard");
+    } else if (roleName === "guest") {
+      navigate("/");
+    }
+  };
+  const getProfile = async (token) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/accounts/profile",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("accountId", data.accountid);
+        setRoleName(data.roleName);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  async function fetchLogin() {
+    try {
+      const response = await fetch("http://localhost:5000/api/accounts/login", {
+        method: "POST",
+        headers: {
+          // Authorization: "Bearer " + token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: "lekhaiphu",
+          password: "123456",
+        }),
+      });
+      if (response.ok) {
+        console.log("Login success!");
+        const responseData = await response.json();
+        console.log(responseData.account.tokens[0]);
+        localStorage.setItem("token", responseData.account.tokens[0]);
+        const token = localStorage.getItem("token");
+        getProfile(token);
+        handleRedirect(roleName);
+      } else {
+        console.error("Error fetching data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("usename"),
-      password: data.get("password"),
-    });
-
-    // const token = localStorage.getItem("token");
-
-    let token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTRiNWNlMGJjMmU1YmI0NDlhMzA0YzkiLCJpYXQiOjE2OTk0Mzc3OTJ9.R-krbOlfiouEOpeQBv9hEplHHcPcCmCRfHQ3JRi4Vog";
-
-    async function fetchLogin() {
-      // const user = {
-      //   username: data.get(username),
-      //   password: data.get("password"),
-      // };
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/accounts/login",
-          {
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + token,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username : "lekhaiphu",
-              password: "123456"
-            }),
-          }
-        );
-        if (response.ok) {
-          console.log("Login success!");
-          // const responseData = await response.json();
-
-        } else {
-          console.error("Error fetching data:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
     fetchLogin();
   };
+  React.useEffect(() => {
+    // Kiểm tra xem roleName đã được lưu trong localStorage chưa
+    const storedRole = localStorage.getItem("roleName");
+
+    if (storedRole) {
+      handleRedirect(storedRole); // Nếu roleName đã có, chuyển hướng dựa trên giá trị đó
+    }
+  }, []);
 
   return (
     <UserLayout>
